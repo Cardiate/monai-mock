@@ -1,0 +1,6 @@
+services:
+  monai-mock:
+    build: .
+    container_name: monai-mock
+    ports:
+      - "8000:8000"
