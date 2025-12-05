@@ -125,7 +125,7 @@ def infer(model_name):
 
     # Dados solicitados
     api_data = {
-        "xnathost": os.getenv("XNAT_HOST"),
+        "xnathost": 'https://monai.go.imside.ai',
         "user": os.getenv("XNAT_USER"),
         "project": project,
         "subject": subject,
