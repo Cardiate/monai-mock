@@ -1,14 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import io
-from flask import redirect
 import os
-
-# primeiro conectamos via rede o xnat ao 
-
-
-
-
+import ef  # seu módulo que chama o Fargate, Lambda etc
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -17,11 +10,8 @@ CORS(app, resources={r"/*": {"origins": "*"}})
 # CONFIGURAÇÃO DOS MODELOS
 # ---------------------------------------------------------
 MODEL_TARGETS = {
-    "ef_analysis": "http://ef_analysis:5000",
-    "calcium_score": "http://calcium_score:5000"
+    "ef_analysis": "http://ef_analysis:5000"
 }
-
-
 
 # =========================================================
 # 1) /info
@@ -33,16 +23,11 @@ def info():
         "name": "MONAILabel MOCK",
         "version": "1.0",
         "description": "MONAI Label mock server (print api_data only)",
-        "labels": ["heart", "calcification"],
+        "labels": ["heart"],
         "models": {
             "ef_analysis": {
                 "type": "segmentation",
                 "labels": {"heart": 1},
-                "dimension": 3
-            },
-            "calcium_score": {
-                "type": "segmentation",
-                "labels": {"calcification": 1},
                 "dimension": 3
             }
         }
@@ -54,7 +39,9 @@ def info():
 # =========================================================
 @app.route("/info/models", methods=["GET"])
 def info_models():
-    return jsonify(["ef_analysis", "calcium_score"])
+    return jsonify([
+        "ef_analysis"
+    ])
 
 
 # =========================================================
@@ -68,7 +55,7 @@ def info_model(name):
 
     return jsonify({
         "type": "segmentation",
-        "labels": {"auto": 1},
+        "labels": {"heart": 1},
         "dimension": 3,
         "model_state": "READY"
     })
@@ -96,7 +83,7 @@ def datastore_info():
 # =========================================================
 @app.route("/session/", methods=["POST", "OPTIONS"])
 def session_create():
-    print("\n✅ MONAILabel Requested Session\n")
+    print("\n✅ MONAILabel Requested Session")
 
     return jsonify({
         "session_id": "mock-session",
@@ -106,7 +93,7 @@ def session_create():
 
 
 # =========================================================
-# 6) /infer/<model>
+# 6) /infer/ef_analysis
 # =========================================================
 @app.route("/infer/<model_name>", methods=["POST"])
 def infer(model_name):
@@ -114,7 +101,9 @@ def infer(model_name):
     if model_name not in MODEL_TARGETS:
         return jsonify({"error": f"Model '{model_name}' not supported"}), 404
 
-    # Recebe o caminho enviado pelo MONAI/OHIF
+    print(f"\n🚀 Infer request received for model: {model_name}")
+
+    # Caminho enviado pelo MONAI / OHIF
     image_path = request.args.get("image", "")
     parts = image_path.split("/") if image_path else []
 
@@ -123,32 +112,35 @@ def infer(model_name):
     experiment = parts[2] if len(parts) > 2 else ""
     scan       = parts[3] if len(parts) > 3 else ""
 
-    # Dados solicitados
     api_data = {
-        "xnathost": 'https://monai.go.imside.ai',
-        "user": os.getenv("XNAT_USER"),
+        "xnathost": os.getenv("XNAT_HOST"),
+        "user": "admin",
         "project": project,
         "subject": subject,
         "experiment": experiment,
+        "experiment_type": "MR",
         "scan": scan,
-        "modelo": model_name
+        "scan_description": "rEIXO_CURTO",
+        "resource_name": "DICOM",
+        "files": "data"
     }
 
-    print("\n==============================")
-    print("✅ BOTÃO RUN PRESSIONADO")
-    print("✅ API DATA RECEBIDO:")
+    print("\n📦 API DATA SENT TO EF MODULE:")
     print(api_data)
-    print("==============================\n")
 
-    return jsonify({"message": "OK"}), 200
-    
+    try:
+        ef.run_fargate_task(api_data)
+        print("✅ Fargate task triggered successfully")
+    except Exception as e:
+        print("❌ Error while calling ef.run_fargate_task:", str(e))
+        return jsonify({"error": "Failed to run ef_analysis"}), 500
+
+    return jsonify({"message": "OK - ef_analysis 실행됨"}), 200
 
 
-
-
-
-
-
+# =========================================================
+# 7) /health
+# =========================================================
 @app.route("/health", methods=["GET"])
 def health():
     return "OK", 200
@@ -158,4 +150,9 @@ if __name__ == "__main__":
     print("\n🚀 MONAI Label mock server running at:")
     print("👉 http://0.0.0.0:8000\n")
 
-    app.run(host="0.0.0.0", port=8000, debug=True, threaded=True)
+    app.run(
+        host="0.0.0.0",
+        port=8000,
+        debug=True,
+        threaded=True
+    )
