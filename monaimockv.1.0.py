@@ -113,7 +113,7 @@ def infer(model_name):
     scan       = parts[3] if len(parts) > 3 else ""
 
     api_data = {
-        "xnathost": os.getenv("XNAT_HOST"),
+        "xnathost": "https://go.imside.ai",
         "user": "admin",
         "project": project,
         "subject": subject,
