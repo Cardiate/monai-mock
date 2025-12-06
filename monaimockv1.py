@@ -15,7 +15,11 @@ ALLOWED_IPS = [
 ]
 
 
-CORS(app, resources={r"/*": {"origins": "*"}})
+#CORS(app, resources={r"/*": {"origins": [
+#    "https://go.imside.ai",
+#    "https://monai.imside.ai"
+#]}})
+
 
 
 # BLOQUEIO POR IP
