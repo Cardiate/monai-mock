@@ -134,8 +134,9 @@ def infer(model_name):
     except Exception as e:
         print("❌ Error while calling ef.run_fargate_task:", str(e))
         return jsonify({"error": "Failed to run ef_analysis"}), 500
+        
 
-    return jsonify({"message": "OK - ef_analysis 실행됨"}), 200
+    return jsonify({"message": "OK - ef_analysis"}), 200
 
 
 # =========================================================
