@@ -1,45 +1,24 @@
-from flask import Flask, request, jsonify, abort
+from flask import Flask, request, jsonify
 from flask_cors import CORS
-import os
-import ef  # modulo que chama o Fargate, Lambda 
-
+import ef
 
 app = Flask(__name__)
 
+CORS(
+    app,
+    resources={r"/*": {
+        "origins": ["https://go.imside.ai"]
+    }},
+    supports_credentials=True
+)
 
-# COLOQUE AQUI OS IPs PERMITIDOS
-ALLOWED_IPS = [
-    "127.0.0.1",
-    "::1",
-    "3.150.190.93"
-]
-
-
-#CORS(app, resources={r"/*": {"origins": [
-#    "https://go.imside.ai",
-#    "https://monai.imside.ai"
-#]}})
-
-
-
-# BLOQUEIO POR IP
 @app.before_request
-def limit_remote_addr():
-    ip = request.remote_addr
-
-    # Permitir localhost
-    if ip in ALLOWED_IPS:
-        return
-
-    # Se estiver usando subnet, ative isto:
-    # if ip.startswith(ALLOWED_SUBNET):
-    #     return
-
-    print(f"🚫 Bloqueado IP não autorizado: {ip}")
-    abort(403)
+def handle_options():
+    if request.method == "OPTIONS":
+        return "", 200
 
 
-# ---------------------------------------------------------
+------------------------------------
 # CONFIGURAÇÃO DOS MODELOS
 # ---------------------------------------------------------
 MODEL_TARGETS = {
