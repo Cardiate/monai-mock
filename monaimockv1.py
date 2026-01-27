@@ -3,14 +3,7 @@ from flask_cors import CORS
 import ef
 
 app = Flask(__name__)
-
-CORS(
-    app,
-    resources={r"/*": {
-        "origins": ["https://go.imside.ai"]
-    }},
-    supports_credentials=True
-)
+CORS(app)
 
 @app.before_request
 def handle_options():
