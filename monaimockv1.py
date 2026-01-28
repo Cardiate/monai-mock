@@ -1,9 +1,20 @@
 from flask import Flask, request, jsonify
-#from flask_cors import CORS
+from flask_cors import CORS
 import ef
 
 app = Flask(__name__)
-#CORS(app)
+CORS(
+    app,
+    supports_credentials=True,
+    origins=[
+        "http://localhost",
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "https://go.imside.ai"
+    ]
+)
+
+
 
 @app.before_request
 def handle_options():
