@@ -1,9 +1,9 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+#from flask_cors import CORS
 import ef
 
 app = Flask(__name__)
-CORS(app)
+#CORS(app)
 
 @app.before_request
 def handle_options():
