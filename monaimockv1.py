@@ -8,7 +8,7 @@ CORS(
     supports_credentials=True,
     origins=[
         "http://localhost",
-        "http://localhost:3000",
+        "http://131.255.22.222",
         "http://localhost:8000",
         "https://go.imside.ai"
     ]
